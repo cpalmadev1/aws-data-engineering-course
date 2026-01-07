@@ -27,6 +27,26 @@ resource "aws_s3_bucket" "data_lake" {
   }
 }
 
+# Configuración de versioning
+resource "aws_s3_bucket_versioning" "data_lake_versioning" {
+  bucket = aws_s3_bucket.data_lake.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Configuración de encriptación
+resource "aws_s3_bucket_server_side_encryption_configuration" "data_lake_encryption" {
+  bucket = aws_s3_bucket.data_lake.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 # Output: Mostrar el nombre del bucket
 output "bucket_name" {
   description = "Nombre del bucket S3 creado"
