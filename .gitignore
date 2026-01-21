@@ -18,3 +18,8 @@ __pycache__/
 *.pyc
 venv/
 .env
+
+# Archivos de prueba y datos temporales
+*.csv
+*.json
+*.txt
