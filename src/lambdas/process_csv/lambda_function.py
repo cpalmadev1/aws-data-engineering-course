@@ -9,17 +9,18 @@ s3_client = boto3.client('s3')
 def lambda_handler(event, context):
     """
     Función principal de Lambda.
-    Se ejecuta cuando llega un archivo a S3.
+    Maneja eventos de:
+    - S3 directo (Sistema 1)
+    - EventBridge (Sistema 2)
     
     Args:
-        event: Información del trigger (bucket, archivo, etc.)
+        event: Evento de S3 o EventBridge
         context: Metadata de Lambda
     """
     
     try:
-        # Obtener info del archivo que activó Lambda
-        bucket = event['Records'][0]['s3']['bucket']['name']
-        key = event['Records'][0]['s3']['object']['key']
+        # Detectar tipo de evento y extraer info
+        bucket, key = extract_s3_info(event)
         
         print(f"🔍 Procesando archivo: {key} del bucket: {bucket}")
         
@@ -55,3 +56,32 @@ def lambda_handler(event, context):
                 'error': str(e)
             })
         }
+
+
+def extract_s3_info(event):
+    """
+    Extrae información de S3 del evento.
+    Soporta:
+    - Eventos de S3 directo (con 'Records')
+    - Eventos de EventBridge (con 'detail')
+    
+    Returns:
+        tuple: (bucket_name, object_key)
+    """
+    # Evento de S3 directo (Sistema 1)
+    if 'Records' in event:
+        print("📌 Evento tipo: S3 Direct Notification")
+        bucket = event['Records'][0]['s3']['bucket']['name']
+        key = event['Records'][0]['s3']['object']['key']
+        return bucket, key
+    
+    # Evento de EventBridge (Sistema 2)
+    elif 'detail' in event:
+        print("📌 Evento tipo: EventBridge")
+        bucket = event['detail']['bucket']['name']
+        key = event['detail']['object']['key']
+        return bucket, key
+    
+    # Evento desconocido
+    else:
+        raise ValueError(f"Formato de evento desconocido: {json.dumps(event)}")
